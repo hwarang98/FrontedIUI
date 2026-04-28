@@ -1,0 +1,83 @@
+// LeeHwaRang All Rights Reserved
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "Subsystems/GameInstanceSubsystem.h"
+#include "Widgets/Widget_ActivatableBase.h"
+#include "FrontendUISubsystem.generated.h"
+
+struct FGameplayTag;
+class UWidget_ActivatableBase;
+class UWidget_PrimaryLayout;
+
+/**
+ * @brief PushSoftWidgetToStackAsync 콜백이 호출되는 시점을 나타내는 열거형
+ *
+ * 비동기 로드 완료 후 위젯 추가 흐름에서 두 단계에 걸쳐 콜백이 발생합니다.
+ */
+enum class EAsyncPushWidgetState : uint8
+{
+	OnCreatedBeforePush, ///< 위젯 인스턴스가 생성된 직후, 스택에 푸시되기 전 — 초기화 작업에 사용
+	AfterPush            ///< 위젯이 스택에 푸시된 직후 — 푸시 완료 후 추가 처리에 사용
+};
+
+/**
+ * @brief Frontend UI 전반을 관리하는 GameInstance 서브시스템
+ *
+ * UGameInstanceSubsystem을 상속받아 게임 인스턴스 생명주기 동안 유지됩니다.
+ * 데디케이티드 서버에서는 생성되지 않으며, 파생 클래스가 존재하면 기본 클래스는 생성을 생략합니다.
+ */
+UCLASS()
+class FRONTEDUI_API UFrontendUISubsystem : public UGameInstanceSubsystem
+{
+	GENERATED_BODY()
+
+public:
+	/**
+	 * @brief WorldContextObject로부터 UFrontendUISubsystem 인스턴스를 반환하는 정적 헬퍼
+	 * @param WorldContextObject 현재 월드를 식별하기 위한 컨텍스트 오브젝트
+	 * @return 해당 GameInstance에 속한 UFrontendUISubsystem 포인터, GEngine이 없으면 nullptr
+	 */
+	static UFrontendUISubsystem* Get(const UObject* WorldContextObject);
+
+	// ~ Begin USubSystem Interface
+
+	/**
+	 * @brief 이 서브시스템의 생성 여부를 결정합니다.
+	 * @param Outer 이 서브시스템을 소유할 UGameInstance 오브젝트
+	 * @return 데디케이티드 서버가 아니고 파생 클래스가 없을 때 true
+	 * @note 파생 클래스가 존재하면 기본 구현 대신 파생 클래스가 사용되도록 false를 반환합니다.
+	 */
+	virtual bool ShouldCreateSubsystem(UObject* Outer) const override;
+
+	// ~ End USubSystem Interface
+
+	/**
+	 * @brief 생성된 PrimaryLayout 위젯을 서브시스템에 등록합니다.
+	 * @param InCreatedWidget 등록할 UWidget_PrimaryLayout 포인터 (nullptr 불허)
+	 * @note 블루프린트에서 PrimaryLayout이 생성된 직후 호출하여 서브시스템이 참조를 보유하도록 합니다.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void RegisterCreatedPrimaryLayout(UWidget_PrimaryLayout* InCreatedWidget);
+
+	/**
+	 * @brief 소프트 클래스 레퍼런스로 위젯을 비동기 로드한 뒤 지정한 스택에 푸시합니다.
+	 * @param InWidgetStackTag         위젯을 추가할 스택을 식별하는 게임플레이 태그
+	 * @param InSoftWidgetClass        비동기로 로드할 위젯의 소프트 클래스 포인터 (null 불허)
+	 * @param AsyncPushStateCallback   로드 완료 후 두 시점(OnCreatedBeforePush, AfterPush)에 호출되는 콜백
+	 * @note 에셋 로드는 UAssetManager의 StreamableManager를 통해 비동기로 처리됩니다.
+	 *       콜백은 로드 완료 후 같은 프레임에서 순차적으로 두 번 호출됩니다.
+	 */
+	void PushSoftWidgetToStackAsync(const FGameplayTag& InWidgetStackTag, TSoftClassPtr<UWidget_ActivatableBase> InSoftWidgetClass, TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> AsyncPushStateCallback);
+
+private:
+	/**
+	 * @brief 현재 활성화된 PrimaryLayout 위젯에 대한 참조
+	 *
+	 * Transient로 지정되어 직렬화에서 제외됩니다.
+	 * RegisterCreatedPrimaryLayout 호출 시 설정되며, 다른 시스템이 레이아웃에 접근할 때 사용됩니다.
+	 */
+	UPROPERTY(Transient)
+	UWidget_PrimaryLayout* CreatedPrimaryLayout;
+};
