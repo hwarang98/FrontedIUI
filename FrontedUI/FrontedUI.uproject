@@ -11,7 +11,8 @@
 			"AdditionalDependencies": [
 				"Engine",
 				"CommonUI",
-				"DeveloperSettings"
+				"DeveloperSettings",
+				"CoreUObject"
 			]
 		}
 	],
@@ -26,6 +27,17 @@
 		{
 			"Name": "CommonUI",
 			"Enabled": true
+		},
+		{
+			"Name": "WindowsDualsense_ds5w",
+			"Enabled": true
+		},
+		{
+			"Name": "GameInputWindows",
+			"Enabled": true,
+			"SupportedTargetPlatforms": [
+				"Win64"
+			]
 		}
 	]
 }

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FrontendTypes/FrontendEnum.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Widgets/Widget_ActivatableBase.h"
 #include "FrontendUISubsystem.generated.h"
@@ -18,9 +19,11 @@ class UWidget_PrimaryLayout;
  */
 enum class EAsyncPushWidgetState : uint8
 {
-	OnCreatedBeforePush, ///< 위젯 인스턴스가 생성된 직후, 스택에 푸시되기 전 — 초기화 작업에 사용
-	AfterPush            ///< 위젯이 스택에 푸시된 직후 — 푸시 완료 후 추가 처리에 사용
+	OnCreatedBeforePush, //< 위젯 인스턴스가 생성된 직후, 스택에 푸시되기 전 — 초기화 작업에 사용
+	AfterPush            //< 위젯이 스택에 푸시된 직후 — 푸시 완료 후 추가 처리에 사용
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnButtonDescriptionTextUpdatedDelegate, UFrontendCommonButtonBase*, BroadcastingButton, FText, DescriptionText);
 
 /**
  * @brief Frontend UI 전반을 관리하는 GameInstance 서브시스템
@@ -71,6 +74,20 @@ public:
 	 */
 	void PushSoftWidgetToStackAsync(const FGameplayTag& InWidgetStackTag, TSoftClassPtr<UWidget_ActivatableBase> InSoftWidgetClass, TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> AsyncPushStateCallback);
 
+	/**
+	 * @brief 확인 팝업을 Modal 스택에 비동기로 푸시합니다.
+	 * @param InScreenType          표시할 버튼 구성 타입 (Ok / YesNo / OKCancel)
+	 * @param InScreenTitle         팝업 제목 텍스트
+	 * @param InScreenMessage       팝업 본문 메시지 텍스트
+	 * @param ButtonClickedCallback 버튼 클릭 시 호출되는 콜백 — 클릭된 버튼의 EConfirmScreenButtonType을 전달
+	 * @note InScreenType이 UnKnow이면 InfoObject가 nullptr이 되어 check()에서 크래시합니다.
+	 */
+	void PushConfirmScreenToModalStackAsync(EConfirmScreenType InScreenType, const FText& InScreenTitle, const FText& InScreenMessage, TFunction<void(EConfirmScreenButtonType)> ButtonClickedCallback);
+
+	/** 버튼의 설명 텍스트가 갱신될 때 브로드캐스트 — 버튼 설명 UI를 구독하는 쪽에서 바인딩 */
+	UPROPERTY(BlueprintAssignable)
+	FOnButtonDescriptionTextUpdatedDelegate OnButtonDescriptionTextUpdated;
+
 private:
 	/**
 	 * @brief 현재 활성화된 PrimaryLayout 위젯에 대한 참조
@@ -79,5 +96,5 @@ private:
 	 * RegisterCreatedPrimaryLayout 호출 시 설정되며, 다른 시스템이 레이아웃에 접근할 때 사용됩니다.
 	 */
 	UPROPERTY(Transient)
-	UWidget_PrimaryLayout* CreatedPrimaryLayout;
+	TObjectPtr<UWidget_PrimaryLayout> CreatedPrimaryLayout;
 };

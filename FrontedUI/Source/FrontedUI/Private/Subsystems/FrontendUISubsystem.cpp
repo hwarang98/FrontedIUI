@@ -4,9 +4,12 @@
 #include "Subsystems/FrontendUISubsystem.h"
 #include "Engine/AssetManager.h"
 #include "FrontendDebugHelper.h"
+#include "FrontendFunctionLibrary.h"
+#include "FrontendGameplayTags.h"
 #include "Widgets/Widget_PrimaryLayout.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 #include "Widgets/Widget_ActivatableBase.h"
+#include "Widgets/Widget_ConfirmScreen.h"
 
 UFrontendUISubsystem* UFrontendUISubsystem::Get(const UObject* WorldContextObject)
 {
@@ -41,8 +44,6 @@ void UFrontendUISubsystem::RegisterCreatedPrimaryLayout(UWidget_PrimaryLayout* I
 	check(InCreatedWidget);
 
 	CreatedPrimaryLayout = InCreatedWidget;
-
-	Debug::Print(TEXT("기본 레이아웃 위젯이 저장됨"));
 }
 
 void UFrontendUISubsystem::PushSoftWidgetToStackAsync(const FGameplayTag& InWidgetStackTag, TSoftClassPtr<UWidget_ActivatableBase> InSoftWidgetClass, TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> AsyncPushStateCallback)
@@ -73,5 +74,52 @@ void UFrontendUISubsystem::PushSoftWidgetToStackAsync(const FGameplayTag& InWidg
 				AsyncPushStateCallback(EAsyncPushWidgetState::AfterPush, CreatedWidget);
 			}
 			)
+		);
+}
+
+void UFrontendUISubsystem::PushConfirmScreenToModalStackAsync(EConfirmScreenType InScreenType, const FText& InScreenTitle, const FText& InScreenMessage, TFunction<void(EConfirmScreenButtonType)> ButtonClickedCallback)
+{
+	// InScreenType에 따라 버튼 구성이 다른 InfoObject를 팩토리 함수로 생성
+	UConfirmScreenInfoObject* CreatedInfoObject = nullptr;
+
+	switch (InScreenType)
+	{
+		case EConfirmScreenType::Ok:
+			// 단순 알림 — OK 버튼(Closed) 하나만 생성
+			CreatedInfoObject = UConfirmScreenInfoObject::CreateOKScreen(InScreenTitle, InScreenMessage);
+			break;
+
+		case EConfirmScreenType::YesNo:
+			// 선택 — Yes(Confirmed) / No(Cancelled) 두 버튼 생성
+			CreatedInfoObject = UConfirmScreenInfoObject::CreateYesNoScreen(InScreenTitle, InScreenMessage);
+			break;
+
+		case EConfirmScreenType::OKCancel:
+			// 선택 — OK(Confirmed) / Cancel(Cancelled) 두 버튼 생성
+			CreatedInfoObject = UConfirmScreenInfoObject::CreateOkCancelScreen(InScreenTitle, InScreenMessage);
+			break;
+
+		case EConfirmScreenType::UnKnow:
+			// UnKnow는 유효하지 않은 타입 — 이후 check()에서 크래시로 잘못된 호출을 감지
+			break;
+
+		default:
+			break;
+	}
+
+	// InfoObject가 nullptr이면 유효하지 않은 InScreenType이 전달된 것
+	check(CreatedInfoObject);
+
+	PushSoftWidgetToStackAsync(
+		FrontendGameplayTags::Frontend_WidgetStack_Modal,
+		UFrontendFunctionLibrary::GetFrontendSoftWidgetClassByTag(FrontendGameplayTags::Frontend_Widget_ConfirmScreen),
+		[CreatedInfoObject, ButtonClickedCallback](EAsyncPushWidgetState InPushState, UWidget_ActivatableBase* PushedWidget) {
+			// OnCreatedBeforePush 단계에서만 초기화 — Push 전에 데이터를 주입해야 위젯이 올바르게 표시됨
+			if (InPushState == EAsyncPushWidgetState::OnCreatedBeforePush)
+			{
+				UWidget_ConfirmScreen* CreatedConfirmScreen = CastChecked<UWidget_ConfirmScreen>(PushedWidget);
+				CreatedConfirmScreen->InitConfirmScreen(CreatedInfoObject, ButtonClickedCallback);
+			}
+		}
 		);
 }

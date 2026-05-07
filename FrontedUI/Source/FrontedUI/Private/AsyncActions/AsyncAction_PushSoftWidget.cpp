@@ -15,11 +15,11 @@ void UAsyncAction_PushSoftWidget::Activate()
 				case EAsyncPushWidgetState::OnCreatedBeforePush:
 					// 푸시 전 소유자를 설정하여 위젯이 올바른 플레이어에 귀속되도록 함
 					PushedWidget->SetOwningPlayer(CachedOnlyPlayerController.Get());
-					OnWidgetCreatedBeforePush.Broadcast(PushedWidget);
+					OnWidgetCreatedBeforePush.Broadcast(PushedWidget); // BP 핀 실행
 					break;
 
 				case EAsyncPushWidgetState::AfterPush:
-					AfterPush.Broadcast(PushedWidget);
+					AfterPush.Broadcast(PushedWidget); // BP 핀 실행
 
 					// 옵션이 활성화된 경우 위젯이 원하는 포커스 타깃으로 포커스 이동
 					if (bCachedFocusOnNewlyPushedWidget)

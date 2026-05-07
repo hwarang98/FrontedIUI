@@ -1,0 +1,36 @@
+// LeeHwaRang All Rights Reserved
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "UObject/Object.h"
+#include "OptionsDataRegistry.generated.h"
+
+class UListDataObject_Collection;
+
+/**
+ * 옵션 화면에서 사용하는 탭 데이터를 생성하고 관리하는 레지스트리.
+ * 옵션 화면이 생성된 직후 InitOptionsDataRegistry를 호출하여 각 탭 컬렉션을 초기화하고,
+ * GetRegisteredOptionsTabCollections로 등록된 탭 목록을 제공합니다.
+ */
+UCLASS()
+class FRONTEDUI_API UOptionsDataRegistry : public UObject
+{
+	GENERATED_BODY()
+
+public:
+	/** 옵션 레지스트리를 초기화합니다. 옵션 화면 생성 직후 호출되며, 각 카테고리 탭 컬렉션을 등록합니다. */
+	void InitOptionsDataRegistry(ULocalPlayer* InOwningLocalPlayer);
+
+	/** 등록된 옵션 탭 컬렉션 배열을 반환합니다. */
+	const TArray<UListDataObject_Collection*>& GetRegisteredOptionsTabCollections() const { return RegisteredOptionsTabCollections; }
+
+private:
+	void InitGameplayCollectionTab(); // 게임플레이 탭 컬렉션 생성 및 등록
+	void InitAudioCollectionTab();    // 오디오 탭 컬렉션 생성 및 등록
+	void InitVideoCollectionTab();    // 비디오 탭 컬렉션 생성 및 등록
+	void InitControlCollectionTab();  // 컨트롤 탭 컬렉션 생성 및 등록
+
+	UPROPERTY(Transient)
+	TArray<UListDataObject_Collection*> RegisteredOptionsTabCollections; // 등록된 탭 컬렉션 배열 (GC 추적, 직렬화 제외)
+};
