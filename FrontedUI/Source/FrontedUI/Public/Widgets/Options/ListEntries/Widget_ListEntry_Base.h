@@ -8,6 +8,7 @@
 #include "Widget_ListEntry_Base.generated.h"
 
 class UCommonTextBlock;
+class UListDataObject_Base;
 /**
  * 
  */
@@ -20,6 +21,9 @@ protected:
 	// ~IUserObjectListEntry Interface
 	virtual void NativeOnListItemObjectSet(UObject* ListItemObject) override;
 	// ~IUserObjectListEntry Interface
+
+	// 자식 클래스는 필요한 초기화 처리를 위해 이 함수를 오버라이드해야 합니다. 또한 `Super` 호출이 필요합니다.
+	virtual void OnOwningListDataObjectSet(UListDataObject_Base* InOwningListDataObject);
 
 private:
 	#pragma region Bound Widgets
