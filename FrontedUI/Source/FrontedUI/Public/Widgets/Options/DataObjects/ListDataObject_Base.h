@@ -17,7 +17,7 @@
  * 모든 리스트 항목에 공통으로 필요한 데이터를 관리합니다.
  * 탭처럼 자식 항목을 가지는 경우 UListDataObject_Collection을 상속하여 사용합니다.
  */
-UCLASS()
+UCLASS(Abstract)
 class FRONTEDUI_API UListDataObject_Base : public UObject
 {
 	GENERATED_BODY()
