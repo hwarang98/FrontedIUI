@@ -32,12 +32,12 @@ void UOptionsDataRegistry::InitGameplayCollectionTab()
 {
 	UListDataObject_Collection* GameplayTabCollection = NewObject<UListDataObject_Collection>();
 	GameplayTabCollection->SetDataID(FName("GameplayTabCollection"));
-	GameplayTabCollection->SetDataDisplayName(FText::FromString(TEXT("Gameplay")));
+	GameplayTabCollection->SetDataDisplayName(FText::FromString(TEXT("게임 플레이")));
 
 	{
 		UListDataObject_String* GameDifficulty = NewObject<UListDataObject_String>();
 		GameDifficulty->SetDataID(FName("GameDifficulty"));
-		GameDifficulty->SetDataDisplayName(FText::FromString(TEXT("Game Difficult")));
+		GameDifficulty->SetDataDisplayName(FText::FromString(TEXT("난이도")));
 
 		GameplayTabCollection->AddChildListData(GameDifficulty);
 	}
@@ -57,7 +57,7 @@ void UOptionsDataRegistry::InitAudioCollectionTab()
 {
 	UListDataObject_Collection* AudioTabCollection = NewObject<UListDataObject_Collection>();
 	AudioTabCollection->SetDataID(FName("AudioTabCollection"));
-	AudioTabCollection->SetDataDisplayName(FText::FromString(TEXT("Audio")));
+	AudioTabCollection->SetDataDisplayName(FText::FromString(TEXT("오디오")));
 
 	RegisteredOptionsTabCollections.Add(AudioTabCollection);
 }
@@ -66,7 +66,7 @@ void UOptionsDataRegistry::InitVideoCollectionTab()
 {
 	UListDataObject_Collection* VideoTabCollection = NewObject<UListDataObject_Collection>();
 	VideoTabCollection->SetDataID(FName("VideoTabCollection"));
-	VideoTabCollection->SetDataDisplayName(FText::FromString(TEXT("Video")));
+	VideoTabCollection->SetDataDisplayName(FText::FromString(TEXT("그래픽")));
 
 	RegisteredOptionsTabCollections.Add(VideoTabCollection);
 }
@@ -75,7 +75,7 @@ void UOptionsDataRegistry::InitControlCollectionTab()
 {
 	UListDataObject_Collection* ControlTabCollection = NewObject<UListDataObject_Collection>();
 	ControlTabCollection->SetDataID(FName("ControlTabCollection"));
-	ControlTabCollection->SetDataDisplayName(FText::FromString(TEXT("Control")));
+	ControlTabCollection->SetDataDisplayName(FText::FromString(TEXT("조작")));
 
 	RegisteredOptionsTabCollections.Add(ControlTabCollection);
 }
