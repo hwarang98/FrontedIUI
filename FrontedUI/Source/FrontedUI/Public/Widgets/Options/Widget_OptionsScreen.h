@@ -25,6 +25,7 @@ protected:
 	virtual void NativeOnInitialized() override; // Reset/Back 입력 액션 바인딩 등록
 	virtual void NativeOnActivated() override;   // DataRegistry 탭 컬렉션을 TabListWidget에 등록
 
+	// 탭 선택 시 호출되어 해당 탭의 옵션 항목 목록을 리스트 뷰에 갱신합니다.
 	UFUNCTION()
 	void OnOptionsTabSelected(FName TabID);
 
@@ -39,7 +40,7 @@ private:
 	TObjectPtr<UFrontendTabListWidgetBase> TabListWidget_OptionsTabs; // 옵션 탭 목록을 표시하는 위젯 (BP 바인딩 필수)
 
 	UPROPERTY(meta = (BindWidget))
-	TObjectPtr<UFrontendCommonListView> CommonListView_OptionsList;
+	TObjectPtr<UFrontendCommonListView> CommonListView_OptionsList; // 선택된 탭의 옵션 항목을 표시하는 리스트 뷰 (BP 바인딩 필수)
 
 	// 옵션 탭 데이터 생성을 담당하는 레지스트리. 반드시 GetOrCreateDataRegistry()를 통해 접근하세요.
 	UPROPERTY(Transient)
