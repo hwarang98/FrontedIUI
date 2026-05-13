@@ -14,6 +14,20 @@ void UOptionsDataRegistry::InitOptionsDataRegistry(ULocalPlayer* InOwningLocalPl
 	InitControlCollectionTab();
 }
 
+TArray<UListDataObject_Base*> UOptionsDataRegistry::GetListSourceItemsBySelectedTabID(const FName& InSelectedTabID)
+{
+	UListDataObject_Collection* const* FoundTabCollectionPtr = RegisteredOptionsTabCollections.FindByPredicate(
+		[InSelectedTabID](const UListDataObject_Collection* AvailableTabCollection)-> bool {
+			return AvailableTabCollection->GetDataID() == InSelectedTabID;
+		});
+
+	checkf(FoundTabCollectionPtr, TEXT("%s 에 해당하는 유효한 Tab ID를 찾을 수 없습니다."), *InSelectedTabID.ToString());
+
+	const UListDataObject_Collection* FoundTabCollection = *FoundTabCollectionPtr;
+
+	return FoundTabCollection->GetAllChildListData();
+}
+
 void UOptionsDataRegistry::InitGameplayCollectionTab()
 {
 	UListDataObject_Collection* GameplayTabCollection = NewObject<UListDataObject_Collection>();
@@ -32,7 +46,7 @@ void UOptionsDataRegistry::InitGameplayCollectionTab()
 		UListDataObject_String* TestItem = NewObject<UListDataObject_String>();
 		TestItem->SetDataID(FName("TestItem"));
 		TestItem->SetDataDisplayName(FText::FromString(TEXT("Test Item")));
-		
+
 		GameplayTabCollection->AddChildListData(TestItem);
 	}
 

@@ -6,6 +6,7 @@
 #include "UObject/Object.h"
 #include "OptionsDataRegistry.generated.h"
 
+class UListDataObject_Base;
 class UListDataObject_Collection;
 
 /**
@@ -24,6 +25,15 @@ public:
 
 	/** 등록된 옵션 탭 컬렉션 배열을 반환합니다. */
 	const TArray<UListDataObject_Collection*>& GetRegisteredOptionsTabCollections() const { return RegisteredOptionsTabCollections; }
+
+	/**
+	 * @brief 선택된 탭 ID에 해당하는 탭 컬렉션의 자식 항목 배열을 반환합니다.
+	 * 해당 ID의 탭이 없으면 checkf로 실행이 중단됩니다.
+	 *
+	 * @param InSelectedTabID 검색할 탭의 고유 식별자
+	 * @return 해당 탭의 자식 리스트 데이터 배열
+	 */
+	TArray<UListDataObject_Base*> GetListSourceItemsBySelectedTabID(const FName& InSelectedTabID);
 
 private:
 	void InitGameplayCollectionTab(); // 게임플레이 탭 컬렉션 생성 및 등록
