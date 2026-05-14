@@ -8,6 +8,7 @@
 
 class UFrontendCommonRotator;
 class UFrontendCommonButtonBase;
+class UListDataObject_String;
 /**
  * 문자열 목록 중 하나를 선택하는 옵션 리스트 엔트리 위젯.
  * 감소/증가 버튼과 로테이터를 통해 사용 가능한 문자열 값을 순환 선택합니다.
@@ -16,6 +17,18 @@ UCLASS(Abstract, BlueprintType, meta=(DisableNativeTick))
 class FRONTEDUI_API UWidget_ListEntry_String : public UWidget_ListEntry_Base
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void NativeOnInitialized() override;
+
+	// ~UWidget_ListEntry_Base Interface
+	virtual void OnOwningListDataObjectSet(UListDataObject_Base* InOwningListDataObject) override;
+	virtual void OnOwningListDataObjectModified(UListDataObject_Base* OwningModifiedData, EOptionsListDataModifyReason ModifyReason) override;
+	// ~UWidget_ListEntry_Base Interface
+
+private:
+	void OnPreviousOptionButtonClicked();
+	void OnNextOptionButtonClicked();
 
 	#pragma region Bound Widgets
 	UPROPERTY(BlueprintReadOnly, meta=(BindWidget, AllowPrivateAccess = "true"))
@@ -29,5 +42,6 @@ class FRONTEDUI_API UWidget_ListEntry_String : public UWidget_ListEntry_Base
 
 	#pragma endregion
 
-
+	UPROPERTY(Transient)
+	TObjectPtr<UListDataObject_String> CachedOwningStringDataObject;
 };

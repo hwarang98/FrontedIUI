@@ -15,4 +15,7 @@ class FRONTEDUI_API UFrontendCommonRotator : public UCommonRotator
 {
 	GENERATED_BODY()
 
+public:
+	void SetSelectedOptionByText(const FText& InTextOption);
+
 };
