@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FrontendTypes/FrontendEnum.h"
 #include "UObject/Object.h"
 #include "ListDataObject_Base.generated.h"
 
@@ -22,7 +23,10 @@ class FRONTEDUI_API UListDataObject_Base : public UObject
 {
 	GENERATED_BODY()
 
-public:\
+public:
+	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnListDataModifiedDelegate, UListDataObject_Base*, EOptionsListDataModifyReason)
+	FOnListDataModifiedDelegate OnListDataModified;
+
 	LIST_DATA_ACCESSOR(FName, DataID)                                    // 항목 고유 식별자
 	LIST_DATA_ACCESSOR(FText, DataDisplayName)                           // UI에 표시되는 항목 이름
 	LIST_DATA_ACCESSOR(FText, DescriptionRichText)                       // 항목 설명 Rich Text
@@ -46,6 +50,8 @@ public:\
 protected:
 	/** 초기화 시 호출되는 훅. 기본 구현은 비어 있으며, 자식 클래스에서 필요한 초기화 로직을 오버라이드합니다. */
 	virtual void OnDataObjectInitialized();
+
+	virtual void NotifyListDataModified(UListDataObject_Base* ModifiedData, EOptionsListDataModifyReason ModifiedReason = EOptionsListDataModifyReason::DirectlyModified);
 
 private:
 	FName DataID;                                    // 항목 고유 식별자
