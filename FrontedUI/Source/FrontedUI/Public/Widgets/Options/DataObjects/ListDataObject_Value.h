@@ -18,8 +18,8 @@ class FRONTEDUI_API UListDataObject_Value : public UListDataObject_Base
 	GENERATED_BODY()
 
 public:
-	void SetDynamicGetter(const TSharedPtr<FOptionsDataInteractionHelper>& InDynamicGetter);
-	void SetDynamicSetter(const TSharedPtr<FOptionsDataInteractionHelper>& InDynamicSetter);
+	void SetDataDynamicGetter(const TSharedPtr<FOptionsDataInteractionHelper>& InDynamicGetter);
+	void SetDataDynamicSetter(const TSharedPtr<FOptionsDataInteractionHelper>& InDynamicSetter);
 
 protected:
 	TSharedPtr<FOptionsDataInteractionHelper> DataDynamicGetter;
