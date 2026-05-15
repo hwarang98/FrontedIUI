@@ -47,6 +47,8 @@ public:
 	/** 자식 리스트 데이터 보유 여부를 반환합니다. UListDataObject_Collection에서 true를 반환하도록 오버라이드합니다. */
 	virtual bool HasAnyChildListData() const { return false; }
 
+	void SetShouldApplySettingsImmediately(bool bShouldApplyRightAway) { bShouldApplyChangeImmediately = bShouldApplyRightAway; }
+
 protected:
 	/** 초기화 시 호출되는 훅. 기본 구현은 비어 있으며, 자식 클래스에서 필요한 초기화 로직을 오버라이드합니다. */
 	virtual void OnDataObjectInitialized();
@@ -62,5 +64,7 @@ private:
 
 	UPROPERTY(Transient)
 	TObjectPtr<UListDataObject_Base> ParentData; // 부모 항목 참조 (GC 추적, 직렬화 제외)
+
+	bool bShouldApplyChangeImmediately = false;
 
 };

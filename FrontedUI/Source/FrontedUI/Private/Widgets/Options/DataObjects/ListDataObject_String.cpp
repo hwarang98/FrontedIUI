@@ -3,6 +3,7 @@
 
 #include "Widgets/Options/DataObjects/ListDataObject_String.h"
 
+#include "FrontendDebugHelper.h"
 #include "Widgets/Options/OptionsDataInteractionHelper.h"
 
 void UListDataObject_String::AddDynamicOption(const FString& InStringValue, const FText& InDisplayText)
@@ -36,6 +37,8 @@ void UListDataObject_String::AdvanceToNextOption()
 	{
 		DataDynamicSetter->SetValueFromString(CurrentStringValue);
 
+		Debug::Print(TEXT("Getter에서 최신 값을 가져오기 위해 DataDynamicSetter를 사용합니다. : ") + DataDynamicGetter->GetValueAsString());
+
 		NotifyListDataModified(this);
 	}
 }
@@ -64,6 +67,8 @@ void UListDataObject_String::BackToPreviousOption()
 	if (DataDynamicSetter)
 	{
 		DataDynamicSetter->SetValueFromString(CurrentStringValue);
+
+		Debug::Print(TEXT("Getter에서 최신 값을 가져오기 위해 DataDynamicSetter를 사용합니다. : ") + DataDynamicGetter->GetValueAsString());
 
 		NotifyListDataModified(this);
 	}
