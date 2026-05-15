@@ -33,6 +33,13 @@ private:
 	void OnResetBoundActionTriggered(); // Reset 액션 입력 시 호출
 	void OnBackBoundActionTriggered();  // Back 액션 입력 시 호출 (위젯 비활성화)
 
+	// 탭 선택 시 호출되어 해당 탭의 옵션 항목 목록을 리스트 뷰에 갱신합니다.
+	UFUNCTION()
+	void OnOptionsTabSelected(FName TabID);
+
+	void OnListViewItemHovered(UObject* InHoveredItem, bool bWasHovered);
+	void OnListViewItemSelected(UObject* InSelectedItem);
+
 	UPROPERTY(meta = (BindWidget))
 	TObjectPtr<UFrontendTabListWidgetBase> TabListWidget_OptionsTabs; // 옵션 탭 목록을 표시하는 위젯 (BP 바인딩 필수)
 
