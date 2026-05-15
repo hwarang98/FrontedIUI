@@ -24,10 +24,7 @@ protected:
 	// UUserWidget Interface
 	virtual void NativeOnInitialized() override; // Reset/Back 입력 액션 바인딩 등록
 	virtual void NativeOnActivated() override;   // DataRegistry 탭 컬렉션을 TabListWidget에 등록
-
-	// 탭 선택 시 호출되어 해당 탭의 옵션 항목 목록을 리스트 뷰에 갱신합니다.
-	UFUNCTION()
-	void OnOptionsTabSelected(FName TabID);
+	virtual void NativeOnDeactivated() override;
 
 private:
 	/** CreatedOwningDataRegistry가 없으면 생성하여 반환합니다. 직접 멤버에 접근하는 대신 이 함수를 사용하세요. */
