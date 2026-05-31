@@ -7,9 +7,12 @@
 #include "ICommonInputModule.h"
 #include "FrontendSettings/FrontendGameUserSettings.h"
 #include "Input/CommonUIInputTypes.h"
+#include "Subsystems/FrontendUISubsystem.h"
+#include "Widgets/Components/FrontendCommonButtonBase.h"
 #include "Widgets/Components/FrontendCommonListView.h"
 #include "Widgets/Components/FrontendTabListWidgetBase.h"
 #include "Widgets/Options/OptionsDataRegistry.h"
+#include "Widgets/Options/Widget_OptionsDetailsView.h"
 #include "Widgets/Options/DataObjects/ListDataObject_Collection.h"
 #include "Widgets/Options/ListEntries/Widget_ListEntry_Base.h"
 
@@ -69,9 +72,24 @@ void UWidget_OptionsScreen::NativeOnDeactivated()
 	UFrontendGameUserSettings::Get()->ApplySettings(true);
 }
 
+UWidget* UWidget_OptionsScreen::NativeGetDesiredFocusTarget() const
+{
+	if (UObject* SelectedObject = CommonListView_OptionsList->GetSelectedItem())
+	{
+		if (UUserWidget* SelectedEntryWidget = CommonListView_OptionsList->GetEntryWidgetFromItem(SelectedObject))
+		{
+			return SelectedEntryWidget;
+		}
+
+	}
+	return Super::NativeGetDesiredFocusTarget();
+}
+
 void UWidget_OptionsScreen::OnOptionsTabSelected(FName TabID)
 {
-	TArray<UListDataObject_Base*> FoundListSourceItems = GetOrCreateDataRegistry()->GetListSourceItemsBySelectedTabID(TabID);
+	DetailsView_ListEntryInfo->ClearDetailsViewInfo();
+
+	const TArray<UListDataObject_Base*> FoundListSourceItems = GetOrCreateDataRegistry()->GetListSourceItemsBySelectedTabID(TabID);
 
 	CommonListView_OptionsList->SetListItems(FoundListSourceItems);
 	CommonListView_OptionsList->RequestRefresh();
@@ -80,6 +98,38 @@ void UWidget_OptionsScreen::OnOptionsTabSelected(FName TabID)
 	{
 		CommonListView_OptionsList->NavigateToIndex(0);
 		CommonListView_OptionsList->SetSelectedIndex(0);
+	}
+
+	ResettableDataArray.Empty();
+
+	for (UListDataObject_Base* FoundListSourceItem : FoundListSourceItems)
+	{
+		if (!FoundListSourceItem)
+		{
+			continue;
+		}
+
+		if (!FoundListSourceItem->OnListDataModified.IsBoundToObject(this))
+		{
+			FoundListSourceItem->OnListDataModified.AddUObject(this, &ThisClass::OnListViewListDataModified);
+		}
+
+		if (FoundListSourceItem->CanResetBackToDefaultValue())
+		{
+			ResettableDataArray.AddUnique(FoundListSourceItem);
+		}
+	}
+
+	if (ResettableDataArray.IsEmpty())
+	{
+		RemoveActionBinding(ResetActionHandle);
+	}
+	else
+	{
+		if (!GetActionBindings().Contains(ResetActionHandle))
+		{
+			AddActionBinding(ResetActionHandle);
+		}
 	}
 }
 
@@ -95,11 +145,28 @@ void UWidget_OptionsScreen::OnListViewItemHovered(UObject* InHoveredItem, bool b
 	check(HoveredEntryWidget)
 
 	HoveredEntryWidget->NativeOnListEntryWidgetHovered(bWasHovered);
+
+	if (bWasHovered)
+	{
+		DetailsView_ListEntryInfo->UpdateDetailsViewInfo(CastChecked<UListDataObject_Base>(InHoveredItem), TryGetEntryWidgetClassName(InHoveredItem));
+	}
+	else
+	{
+		if (UListDataObject_Base* SelectedItem = CommonListView_OptionsList->GetSelectedItem<UListDataObject_Base>())
+		{
+			DetailsView_ListEntryInfo->UpdateDetailsViewInfo(SelectedItem, TryGetEntryWidgetClassName(InHoveredItem));
+		}
+	}
 }
 
 void UWidget_OptionsScreen::OnListViewItemSelected(UObject* InSelectedItem)
 {
-	if (!InSelectedItem) {}
+	if (!InSelectedItem)
+	{
+		return;
+	}
+
+	DetailsView_ListEntryInfo->UpdateDetailsViewInfo(CastChecked<UListDataObject_Base>(InSelectedItem), TryGetEntryWidgetClassName(InSelectedItem));
 
 }
 
@@ -119,10 +186,109 @@ UOptionsDataRegistry* UWidget_OptionsScreen::GetOrCreateDataRegistry()
 
 void UWidget_OptionsScreen::OnResetBoundActionTriggered()
 {
-	Debug::Print(TEXT("재설정 바운드 작업이 트리거됨"));
+	if (ResettableDataArray.IsEmpty())
+	{
+		return;
+	}
+
+	UCommonButtonBase* SelectedTabButton = TabListWidget_OptionsTabs->GetTabButtonBaseByID(TabListWidget_OptionsTabs->GetActiveTab());
+
+	const FString SelectedTabButtonName = CastChecked<UFrontendCommonButtonBase>(SelectedTabButton)->GetButtonDisplayText().ToString();
+
+	UFrontendUISubsystem::Get(this)->PushConfirmScreenToModalStackAsync(
+		EConfirmScreenType::YesNo,
+		FText::FromString(TEXT("초기화")),
+		FText::FromString(TEXT("모든 ") + SelectedTabButtonName + TEXT(" 탭 설정을 초기화하시겠습니까?")),
+		[this](EConfirmScreenButtonType ClickedButtonType) {
+			// Yes가 아닌 버튼(No, 닫기 등)이 눌리면 초기화 취소
+			if (ClickedButtonType != EConfirmScreenButtonType::Confirmed)
+			{
+				return;\
+			}
+
+			// true로 설정하면 OnListViewListDataModified 상단 가드에서 조기 반환되어 ResettableDataArray 변경을 차단
+			bIsResettingData = true;
+			bool bHasDataFailedToReset = false;
+
+			for (UListDataObject_Base* DataToReset : ResettableDataArray)
+			{
+				// GC로 인해 배열 내 항목이 무효화될 수 있으므로 유효성 검사
+				if (!DataToReset)
+				{
+					continue;
+				}
+
+				// 반환값: true = 초기화 성공, false = 초기화 실패 (데이터 타입이 초기화를 지원하지 않는 경우)
+				if (DataToReset->TryResetBackToDefaultValue())
+				{
+					Debug::Print(DataToReset->GetDataDisplayName().ToString() + TEXT(" was reset"));
+				}
+				else
+				{
+					// 초기화 실패 항목이 하나라도 있으면 루프 완료 후 배열을 유지
+					bHasDataFailedToReset = true;
+					Debug::Print(DataToReset->GetDataDisplayName().ToString() + TEXT(" 초기회 실패"));
+				}
+			}
+
+			// 일부 항목이라도 초기화에 실패하면 배열을 유지해 Reset 바인딩을 남겨둠
+			if (!bHasDataFailedToReset)
+			{
+				ResettableDataArray.Empty();
+				RemoveActionBinding(ResetActionHandle);
+			}
+
+			bIsResettingData = false;
+		}
+		);
+
 }
 
 void UWidget_OptionsScreen::OnBackBoundActionTriggered()
 {
 	DeactivateWidget();
+}
+
+FString UWidget_OptionsScreen::TryGetEntryWidgetClassName(const UObject* InOwningListItem) const
+{
+	if (const UUserWidget* FoundEntryWidget = CommonListView_OptionsList->GetEntryWidgetFromItem(InOwningListItem))
+	{
+		return FoundEntryWidget->GetClass()->GetName();
+	}
+
+	return TEXT("Entry Widget Not Valid");
+}
+
+void UWidget_OptionsScreen::OnListViewListDataModified(UListDataObject_Base* ModifiedData, EOptionsListDataModifyReason ModifyReason)
+{
+	if (!ModifiedData || bIsResettingData)
+	{
+		return;
+	}
+
+	// 기본값과 달라진 항목이면 초기화 대상 배열에 추가하고 Reset 바인딩 활성화
+	if (ModifiedData->CanResetBackToDefaultValue())
+	{
+		ResettableDataArray.AddUnique(ModifiedData);
+
+		// 중복 바인딩 방지
+		if (!GetActionBindings().Contains(ResetActionHandle))
+		{
+			AddActionBinding(ResetActionHandle);
+		}
+	}
+	else
+	{
+		// 기본값으로 돌아온 항목은 초기화 대상에서 제거
+		if (ResettableDataArray.Contains(ModifiedData))
+		{
+			ResettableDataArray.Remove(ModifiedData);
+		}
+	}
+
+	// 초기화할 항목이 없으면 Reset 바인딩 제거
+	if (ResettableDataArray.IsEmpty())
+	{
+		RemoveActionBinding(ResetActionHandle);
+	}
 }
