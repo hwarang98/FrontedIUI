@@ -47,6 +47,11 @@ public:
 	/** 자식 리스트 데이터 보유 여부를 반환합니다. UListDataObject_Collection에서 true를 반환하도록 오버라이드합니다. */
 	virtual bool HasAnyChildListData() const { return false; }
 
+	// 자식 클래스에서 데이터를 초기화(reset)하는 구현을 제공하도록 해당 함수들을 오버라이드해야 합니다.
+	virtual bool HasDefaultValue() const { return false; }
+	virtual bool CanResetBackToDefaultValue() const { return false; }
+	virtual bool TryResetBackToDefaultValue() { return false; }
+
 	void SetShouldApplySettingsImmediately(bool bShouldApplyRightAway) { bShouldApplyChangeImmediately = bShouldApplyRightAway; }
 
 protected:

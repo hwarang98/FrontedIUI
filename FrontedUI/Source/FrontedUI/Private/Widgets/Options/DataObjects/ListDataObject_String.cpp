@@ -2,9 +2,34 @@
 
 
 #include "Widgets/Options/DataObjects/ListDataObject_String.h"
-
 #include "FrontendDebugHelper.h"
 #include "Widgets/Options/OptionsDataInteractionHelper.h"
+
+void UListDataObject_String::OnDataObjectInitialized()
+{
+	if (!AvailableOptionsStringArray.IsEmpty())
+	{
+		CurrentStringValue = AvailableOptionsStringArray[0];
+	}
+
+	if (HasDefaultValue())
+	{
+		CurrentStringValue = GetDefaultValueAsString();
+	}
+
+	if (DataDynamicGetter)
+	{
+		if (!DataDynamicGetter->GetValueAsString().IsEmpty())
+		{
+			CurrentStringValue = DataDynamicGetter->GetValueAsString();
+		}
+	}
+
+	if (!TrySetDisplayTextFromStringValue(CurrentStringValue))
+	{
+		CurrentDisplayText = FText::FromString(TEXT("Invalid Option"));
+	}
+}
 
 void UListDataObject_String::AddDynamicOption(const FString& InStringValue, const FText& InDisplayText)
 {
@@ -74,27 +99,54 @@ void UListDataObject_String::BackToPreviousOption()
 	}
 }
 
-void UListDataObject_String::OnDataObjectInitialized()
+void UListDataObject_String::OnRotatorInitiatedValueChange(const FText& InNewSelectedText)
 {
-	if (!AvailableOptionsStringArray.IsEmpty())
-	{
-		CurrentStringValue = AvailableOptionsStringArray[0];
-	}
+	// FText::operator==는 문화권(locale)에 따라 결과가 달라질 수 있으므로 EqualTo로 비교
+	const int32 FoundIndex = AvailableOptionsTextArray.IndexOfByPredicate(
+		[InNewSelectedText](const FText& AvailableText)-> bool {
+			return AvailableText.EqualTo(InNewSelectedText);
+		}
+		);
 
-	// TODO: 저장된 문자열 값을 읽어와 `CurrentStringValue`에 설정합니다.
-	if (DataDynamicGetter)
+	// TextArray와 StringArray는 동일한 인덱스로 대응되므로 두 배열 모두 유효성 확인
+	if (FoundIndex != INDEX_NONE && AvailableOptionsStringArray.IsValidIndex(FoundIndex))
 	{
-		if (!DataDynamicGetter->GetValueAsString().IsEmpty())
+		CurrentDisplayText = InNewSelectedText;
+		CurrentStringValue = AvailableOptionsStringArray[FoundIndex];
+
+		if (DataDynamicSetter)
 		{
-			CurrentStringValue = DataDynamicGetter->GetValueAsString();
+			DataDynamicSetter->SetValueFromString(CurrentStringValue);
+
+			NotifyListDataModified(this); // UI 갱신 및 외부 리스너에게 변경 알림
+		}
+	}
+}
+
+bool UListDataObject_String::CanResetBackToDefaultValue() const
+{
+	return HasDefaultValue() && CurrentStringValue != GetDefaultValueAsString();
+}
+
+bool UListDataObject_String::TryResetBackToDefaultValue()
+{
+	if (CanResetBackToDefaultValue())
+	{
+		CurrentStringValue = GetDefaultValueAsString();
+
+		TrySetDisplayTextFromStringValue(CurrentStringValue);
+
+		if (DataDynamicSetter)
+		{
+			DataDynamicSetter->SetValueFromString(CurrentStringValue);
+
+			NotifyListDataModified(this, EOptionsListDataModifyReason::ResetToDefault);
+
+			return true;
 		}
 	}
 
-	if (!TrySetDisplayTextFromStringValue(CurrentStringValue))
-	{
-		CurrentDisplayText = FText::FromString(TEXT("Invalid Option"));
-	}
-
+	return false;
 }
 
 bool UListDataObject_String::TrySetDisplayTextFromStringValue(const FString& InStringValue)
