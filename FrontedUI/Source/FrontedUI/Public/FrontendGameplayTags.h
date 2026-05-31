@@ -21,4 +21,8 @@ namespace FrontendGameplayTags
 	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_OptionsScreen);
 	#pragma endregion
 
+	#pragma region Frontend Option Image
+	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Image_TestImage);
+	#pragma endregion
+
 }

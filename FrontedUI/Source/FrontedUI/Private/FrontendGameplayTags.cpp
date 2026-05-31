@@ -18,4 +18,8 @@ namespace FrontendGameplayTags
 	UE_DEFINE_GAMEPLAY_TAG(Frontend_Widget_ConfirmScreen, "Frontend.Widget.ConfirmScreen");
 	UE_DEFINE_GAMEPLAY_TAG(Frontend_Widget_OptionsScreen, "Frontend.Widget.OptionsScreen");
 	#pragma endregion
+
+	#pragma region Frontend Option Image
+	UE_DEFINE_GAMEPLAY_TAG(Frontend_Image_TestImage, "Frontend.Image.TestImage");
+	#pragma endregion
 }

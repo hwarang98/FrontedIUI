@@ -13,3 +13,12 @@ TSoftClassPtr<UWidget_ActivatableBase> UFrontendFunctionLibrary::GetFrontendSoft
 
 	return FrontendDeveloperSettings->FrontendWidgetMap.FindRef(InWidgetTag);
 }
+
+TSoftObjectPtr<UTexture2D> UFrontendFunctionLibrary::GetOptionsSoftImageByTag(FGameplayTag InImageTag)
+{
+	const UFrontendDeveloperSettings* FrontendDeveloperSettings = GetDefault<UFrontendDeveloperSettings>();
+
+	checkf(FrontendDeveloperSettings->OptionsScreenSoftImageMap.Contains(InImageTag), TEXT("%s 태그와 연관된 이미지를 찾을 수 없습니다."), *InImageTag.ToString());
+
+	return FrontendDeveloperSettings->OptionsScreenSoftImageMap.FindRef(InImageTag);
+}
