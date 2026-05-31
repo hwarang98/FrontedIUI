@@ -19,8 +19,8 @@ class UWidget_PrimaryLayout;
  */
 enum class EAsyncPushWidgetState : uint8
 {
-	OnCreatedBeforePush, //< 위젯 인스턴스가 생성된 직후, 스택에 푸시되기 전 — 초기화 작업에 사용
-	AfterPush            //< 위젯이 스택에 푸시된 직후 — 푸시 완료 후 추가 처리에 사용
+	OnCreatedBeforePush, // 위젯 인스턴스가 생성된 직후, 스택에 푸시되기 전 — 초기화 작업에 사용
+	AfterPush            // 위젯이 스택에 푸시된 직후 — 푸시 완료 후 추가 처리에 사용
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnButtonDescriptionTextUpdatedDelegate, UFrontendCommonButtonBase*, BroadcastingButton, FText, DescriptionText);

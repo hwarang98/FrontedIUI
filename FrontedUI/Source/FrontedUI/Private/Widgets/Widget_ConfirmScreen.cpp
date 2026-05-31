@@ -17,7 +17,7 @@ UConfirmScreenInfoObject* UConfirmScreenInfoObject::CreateOKScreen(const FText& 
 	// OK는 단순 닫기(Closed) — 확인/취소 의미 없이 팝업만 닫으면 되는 경우
 	FConfirmScreenButtonInfo OKButtonInfo;
 	OKButtonInfo.ConfirmScreenButtonType = EConfirmScreenButtonType::Closed;
-	OKButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("OK"));
+	OKButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("확인"));
 
 	InfoObject->AvailableScreenButtons.Add(OKButtonInfo);
 
@@ -34,11 +34,11 @@ UConfirmScreenInfoObject* UConfirmScreenInfoObject::CreateYesNoScreen(const FTex
 	// Yes → Confirmed, No -> Cancelled 로 매핑
 	FConfirmScreenButtonInfo YesButtonInfo;
 	YesButtonInfo.ConfirmScreenButtonType = EConfirmScreenButtonType::Confirmed;
-	YesButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("Yes"));
+	YesButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("예"));
 
 	FConfirmScreenButtonInfo NoButtonInfo;
 	NoButtonInfo.ConfirmScreenButtonType = EConfirmScreenButtonType::Cancelled;
-	NoButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("No"));
+	NoButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("아니오"));
 
 	InfoObject->AvailableScreenButtons.Add(YesButtonInfo);
 	InfoObject->AvailableScreenButtons.Add(NoButtonInfo);
@@ -55,11 +55,11 @@ UConfirmScreenInfoObject* UConfirmScreenInfoObject::CreateOkCancelScreen(const F
 	// OK -> Confirmed, Cancel -> Cancelled 로 매핑 (Yes/No 화면과 의미 동일, 표시 텍스트만 다름)
 	FConfirmScreenButtonInfo OkButtonInfo;
 	OkButtonInfo.ConfirmScreenButtonType = EConfirmScreenButtonType::Confirmed;
-	OkButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("Ok"));
+	OkButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("확인"));
 
 	FConfirmScreenButtonInfo CancelButtonInfo;
 	CancelButtonInfo.ConfirmScreenButtonType = EConfirmScreenButtonType::Cancelled;
-	CancelButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("Cancel"));
+	CancelButtonInfo.ButtonTextToDisplay = FText::FromString(TEXT("취소"));
 
 	InfoObject->AvailableScreenButtons.Add(OkButtonInfo);
 	InfoObject->AvailableScreenButtons.Add(CancelButtonInfo);
