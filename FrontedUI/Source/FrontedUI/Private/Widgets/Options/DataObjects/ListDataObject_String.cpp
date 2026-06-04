@@ -7,6 +7,7 @@
 
 void UListDataObject_String::OnDataObjectInitialized()
 {
+	// 우선순위: 배열 첫 항목 → 기본값 → Getter 순으로 덮어쓴다
 	if (!AvailableOptionsStringArray.IsEmpty())
 	{
 		CurrentStringValue = AvailableOptionsStringArray[0];
@@ -53,7 +54,7 @@ void UListDataObject_String::AdvanceToNextOption()
 	}
 	else
 	{
-		CurrentStringValue = AvailableOptionsStringArray[0];
+		CurrentStringValue = AvailableOptionsStringArray[0]; // 마지막 이후 → 첫 번째로 순환
 	}
 
 	TrySetDisplayTextFromStringValue(CurrentStringValue);
@@ -84,7 +85,7 @@ void UListDataObject_String::BackToPreviousOption()
 	}
 	else
 	{
-		CurrentStringValue = AvailableOptionsStringArray.Last();
+		CurrentStringValue = AvailableOptionsStringArray.Last(); // 첫 번째 이전 → 마지막으로 순환
 	}
 
 	TrySetDisplayTextFromStringValue(CurrentStringValue);
@@ -136,6 +137,7 @@ bool UListDataObject_String::TryResetBackToDefaultValue()
 
 		TrySetDisplayTextFromStringValue(CurrentStringValue);
 
+		// DataDynamicSetter가 없으면 외부에 반영할 수 없으므로 false 반환
 		if (DataDynamicSetter)
 		{
 			DataDynamicSetter->SetValueFromString(CurrentStringValue);
