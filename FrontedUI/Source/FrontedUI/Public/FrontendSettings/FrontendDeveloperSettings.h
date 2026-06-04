@@ -23,4 +23,16 @@ public:
 	UPROPERTY(Config, EditAnywhere, Category = "Options Image Reference", meta = (ForceInlineRow, Categories = "Frontend.Image"))
 	TMap<FGameplayTag, TSoftObjectPtr<UTexture2D>> OptionsScreenSoftImageMap;
 
+	UPROPERTY(Config, EditAnywhere, Category = "Audio", meta = ( AllowedClasses = "/Script/Engine.SoundClass" ))
+	FSoftObjectPath MasterSoundClass;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Audio", meta = ( AllowedClasses = "/Script/Engine.SoundClass" ))
+	FSoftObjectPath MusicSoundClass;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Audio", meta = ( AllowedClasses = "/Script/Engine.SoundClass" ))
+	FSoftObjectPath SoundFXSoundClass;
+
+	UPROPERTY(Config, EditAnywhere, Category = "Audio", meta = ( AllowedClasses = "/Script/Engine.SoundMix" ))
+	FSoftObjectPath DefaultSoundMix;
+
 };
