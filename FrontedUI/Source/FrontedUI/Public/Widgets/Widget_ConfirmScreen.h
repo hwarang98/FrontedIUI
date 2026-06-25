@@ -79,6 +79,9 @@ public:
 	 */
 	void InitConfirmScreen(const UConfirmScreenInfoObject* InScreenInfoObject, TFunction<void(EConfirmScreenButtonType)> ClickedButtonCallback);
 
+protected:
+	virtual UWidget* NativeGetDesiredFocusTarget() const override;
+
 private:
 	/** 화면 제목을 표시하는 텍스트 블록 */
 	UPROPERTY(meta = (BindWidget))

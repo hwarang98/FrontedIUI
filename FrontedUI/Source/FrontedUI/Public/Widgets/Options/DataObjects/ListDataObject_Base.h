@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "FrontendTypes/FrontendEnum.h"
 #include "UObject/Object.h"
+#include "FrontendTypes/FrontendStructTypes.h"
 #include "ListDataObject_Base.generated.h"
 
 /** Get/Set 접근자 쌍을 자동 생성하는 매크로. DataType 반환형, PropertyName 기반으로 Getter/Setter를 인라인 정의합니다. */
@@ -26,6 +27,7 @@ class FRONTEDUI_API UListDataObject_Base : public UObject
 public:
 	DECLARE_MULTICAST_DELEGATE_TwoParams(FOnListDataModifiedDelegate, UListDataObject_Base*, EOptionsListDataModifyReason)
 	FOnListDataModifiedDelegate OnListDataModified;
+	FOnListDataModifiedDelegate OnDependencyDataModified;
 
 	LIST_DATA_ACCESSOR(FName, DataID)                                    // 항목 고유 식별자
 	LIST_DATA_ACCESSOR(FText, DataDisplayName)                           // UI에 표시되는 항목 이름
@@ -36,6 +38,9 @@ public:
 
 	/** 데이터 오브젝트를 초기화합니다. 내부적으로 OnDataObjectInitialized를 호출하며, AddChildListData 시점에 자동 호출됩니다. */
 	void InitDataObject();
+
+	/** 설정 값 변경 시 즉시 적용 여부를 설정합니다. */
+	void SetShouldApplySettingsImmediately(bool bShouldApplyRightAway) { bShouldApplyChangeImmediately = bShouldApplyRightAway; }
 
 	/**
 	 * 이 항목이 보유한 자식 설정 데이터 목록을 반환합니다.
@@ -52,13 +57,44 @@ public:
 	virtual bool CanResetBackToDefaultValue() const { return false; }
 	virtual bool TryResetBackToDefaultValue() { return false; }
 
-	void SetShouldApplySettingsImmediately(bool bShouldApplyRightAway) { bShouldApplyChangeImmediately = bShouldApplyRightAway; }
+	/**
+	 * @brief OptionsDataRegistry에서 생성된 목록 데이터 객체의 편집 조건을 추가합니다.
+	 *
+	 * @param InEditCondition 추가할 편집 조건 디스크립터
+	 */
+	void AddEditCondition(const FOptionsDataEditConditionDescriptor& InEditCondition);
+
+	void AddEditDependencyData(UListDataObject_Base* InDependencyData);
+
+	/**
+	 * @brief 등록된 모든 편집 조건을 평가하여 현재 편집 가능 여부를 반환합니다.
+	 *
+	 * @return 모든 조건이 충족되면 true, 하나라도 미충족이면 false
+	 * @note 조건 미충족 시 DisabledRichText를 갱신하고, 강제 값(ForcedStringValue)이 있으면 현재 값에 적용합니다.
+	 */
+	bool IsDataCurrentlyEditable();
 
 protected:
 	/** 초기화 시 호출되는 훅. 기본 구현은 비어 있으며, 자식 클래스에서 필요한 초기화 로직을 오버라이드합니다. */
 	virtual void OnDataObjectInitialized();
 
+	/**
+	 * @brief 데이터 변경을 OnListDataModified 델리게이트로 브로드캐스트합니다.
+	 *
+	 * @param ModifiedData 변경된 데이터 오브젝트
+	 * @param ModifiedReason 변경 이유 (기본값: DirectlyModified)
+	 * @note bShouldApplyChangeImmediately가 true이면 변경 즉시 게임 유저 세팅에 적용합니다.
+	 */
 	virtual void NotifyListDataModified(UListDataObject_Base* ModifiedData, EOptionsListDataModifyReason ModifiedReason = EOptionsListDataModifyReason::DirectlyModified);
+
+	// 자식 클래스는 이 값을 강제 문자열 값으로 설정할 수 있도록 이 값을 재정의해야 합니다.
+	virtual bool CanSetToForcedStringValue(const FString& InForcedValue) const { return false; }
+
+	// 자아 클래스는 현재 값을 강제 값으로 설정하는 방법을 지정하려면 이를 재정의해야 합니다.
+	virtual void OnSetToForcedStringValue(const FString& InForcedValue) {}
+
+	//이 함수는 종속성 데이터의 값이 변경되면 호출됩니다. 자식 클래스는 필요한 사용자 지정 로직을 처리하기 위해 이 함수를 재정의할 수 있습니다. 슈퍼 호출이 예상됩니다.
+	virtual void OnEditDependencyDataModified(UListDataObject_Base* ModifiedDependencyData, EOptionsListDataModifyReason ModifiedReason);
 
 private:
 	FName DataID;                                    // 항목 고유 식별자
@@ -72,4 +108,6 @@ private:
 
 	bool bShouldApplyChangeImmediately = false;
 
+	UPROPERTY(Transient)
+	TArray<FOptionsDataEditConditionDescriptor> EditConditionDescArray;
 };

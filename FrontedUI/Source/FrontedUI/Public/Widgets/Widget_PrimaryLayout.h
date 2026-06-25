@@ -25,9 +25,7 @@ public:
 	/**
 	 * @brief 게임플레이 태그에 해당하는 위젯 스택을 반환합니다.
 	 * @param InTag 조회할 위젯 스택의 게임플레이 태그
-	 * @return 해당 태그에 등록된 UCommonActivatableWidgetContainerBase 포인터
-	 * @warning 태그에 해당하는 스택이 존재하지 않으면 checkf로 크래시가 발생합니다.
-	 *          호출 전 반드시 RegisterWidgetStack을 통해 스택을 등록해야 합니다.
+	 * @return 해당 태그에 등록된 스택 포인터, 없으면 nullptr
 	 */
 	UCommonActivatableWidgetContainerBase* FindWidgetStackByTag(const FGameplayTag& InTag) const;
 

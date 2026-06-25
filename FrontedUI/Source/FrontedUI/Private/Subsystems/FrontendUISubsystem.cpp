@@ -6,10 +6,13 @@
 #include "FrontendDebugHelper.h"
 #include "FrontendFunctionLibrary.h"
 #include "FrontendGameplayTags.h"
+#include "FrontendSettings/FrontendDeveloperSettings.h"
+#include "Kismet/GameplayStatics.h"
 #include "Widgets/Widget_PrimaryLayout.h"
 #include "Widgets/CommonActivatableWidgetContainer.h"
 #include "Widgets/Widget_ActivatableBase.h"
 #include "Widgets/Widget_ConfirmScreen.h"
+#include "Widgets/Widget_HudNotification.h"
 
 UFrontendUISubsystem* UFrontendUISubsystem::Get(const UObject* WorldContextObject)
 {
@@ -44,6 +47,25 @@ void UFrontendUISubsystem::RegisterCreatedPrimaryLayout(UWidget_PrimaryLayout* I
 	check(InCreatedWidget);
 
 	CreatedPrimaryLayout = InCreatedWidget;
+
+	// 레벨이 바뀌면 이전 레이아웃용 pending 요청은 의미가 없으므로 초기화
+	PendingWidgetPushes.Empty();
+}
+
+void UFrontendUISubsystem::StartNewGame()
+{
+	const UFrontendDeveloperSettings* Settings = GetDefault<UFrontendDeveloperSettings>();
+	check(!Settings->MainGameLevel.IsNull());
+
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Settings->MainGameLevel);
+}
+
+void UFrontendUISubsystem::ReturnToFrontend()
+{
+	const UFrontendDeveloperSettings* Settings = GetDefault<UFrontendDeveloperSettings>();
+	check(!Settings->FrontendLevel.IsNull());
+
+	UGameplayStatics::OpenLevelBySoftObjectPtr(this, Settings->FrontendLevel);
 }
 
 void UFrontendUISubsystem::PushSoftWidgetToStackAsync(const FGameplayTag& InWidgetStackTag, TSoftClassPtr<UWidget_ActivatableBase> InSoftWidgetClass, TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> AsyncPushStateCallback)
@@ -62,6 +84,18 @@ void UFrontendUISubsystem::PushSoftWidgetToStackAsync(const FGameplayTag& InWidg
 
 				UCommonActivatableWidgetContainerBase* FoundWidgetStack = CreatedPrimaryLayout->FindWidgetStackByTag(InWidgetStackTag);
 
+				// 스택이 아직 등록되지 않은 경우 — 에셋 캐시로 인해 콜백이 RegisterWidgetStack 전에
+				// 실행됐을 때 발생할 수 있다. pending 큐에 저장하고 RegisterWidgetStack 시 소진
+				if (!FoundWidgetStack)
+				{
+					FPendingWidgetPush Pending;
+					Pending.WidgetStackTag = InWidgetStackTag;
+					Pending.LoadedWidgetClass = LoadedWidgetClass;
+					Pending.Callback = AsyncPushStateCallback;
+					PendingWidgetPushes.Add(MoveTemp(Pending));
+					return;
+				}
+
 				// AddWidget 내부에서 인스턴스 생성 직후 OnCreatedBeforePush 콜백을 실행하여 Push 전 초기화 기회 제공
 				UWidget_ActivatableBase* CreatedWidget = FoundWidgetStack->AddWidget<UWidget_ActivatableBase>(
 					LoadedWidgetClass,
@@ -75,6 +109,55 @@ void UFrontendUISubsystem::PushSoftWidgetToStackAsync(const FGameplayTag& InWidg
 			}
 			)
 		);
+}
+
+void UFrontendUISubsystem::ShowHudNotification(const FText& Message, float Duration)
+{
+	const UFrontendDeveloperSettings* Settings = GetDefault<UFrontendDeveloperSettings>();
+	UClass* WidgetClass = Settings->HudNotificationWidgetClass.LoadSynchronous();
+	if (!WidgetClass)
+	{
+		return;
+	}
+
+	UWorld* World = GetGameInstance()->GetWorld();
+	APlayerController* PlayerController = World ? World->GetFirstPlayerController() : nullptr;
+	if (!PlayerController)
+	{
+		return;
+	}
+
+	UWidget_HudNotification* Widget = CreateWidget<UWidget_HudNotification>(PlayerController, WidgetClass);
+	if (!Widget)
+	{
+		return;
+	}
+
+	Widget->InitNotification(Message, Duration);
+	Widget->AddToViewport();
+}
+
+void UFrontendUISubsystem::FlushPendingPushesForStack(const FGameplayTag& InStackTag, UCommonActivatableWidgetContainerBase* InStack)
+{
+	for (int32 i = PendingWidgetPushes.Num() - 1; i >= 0; --i)
+	{
+		FPendingWidgetPush& Pending = PendingWidgetPushes[i];
+
+		if (Pending.WidgetStackTag != InStackTag || !Pending.LoadedWidgetClass.IsValid())
+		{
+			continue;
+		}
+
+		UWidget_ActivatableBase* CreatedWidget = InStack->AddWidget<UWidget_ActivatableBase>(
+			Pending.LoadedWidgetClass.Get(),
+			[Callback = Pending.Callback](UWidget_ActivatableBase& CreatedWidgetInstance) {
+				Callback(EAsyncPushWidgetState::OnCreatedBeforePush, &CreatedWidgetInstance);
+			}
+			);
+
+		Pending.Callback(EAsyncPushWidgetState::AfterPush, CreatedWidget);
+		PendingWidgetPushes.RemoveAt(i);
+	}
 }
 
 void UFrontendUISubsystem::PushConfirmScreenToModalStackAsync(EConfirmScreenType InScreenType, const FText& InScreenTitle, const FText& InScreenMessage, TFunction<void(EConfirmScreenButtonType)> ButtonClickedCallback)

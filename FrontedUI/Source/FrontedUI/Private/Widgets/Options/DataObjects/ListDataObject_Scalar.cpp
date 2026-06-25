@@ -44,7 +44,7 @@ void UListDataObject_Scalar::SetCurrentValueFromSlider(float InNewValue)
 
 bool UListDataObject_Scalar::CanResetBackToDefaultValue() const
 {
-	if (HasDefaultValue() || DataDynamicGetter)
+	if (HasDefaultValue() && DataDynamicGetter)
 	{
 		const float DefaultValue = StringToFloat(GetDefaultValueAsString());
 		const float CurrentValue = StringToFloat(DataDynamicGetter->GetValueAsString());
@@ -70,6 +70,13 @@ bool UListDataObject_Scalar::TryResetBackToDefaultValue()
 	}
 
 	return false;
+}
+
+void UListDataObject_Scalar::OnEditDependencyDataModified(UListDataObject_Base* ModifiedDependencyData, EOptionsListDataModifyReason ModifiedReason)
+{
+	NotifyListDataModified(this, EOptionsListDataModifyReason::DependencyModified);
+
+	Super::OnEditDependencyDataModified(ModifiedDependencyData, ModifiedReason);
 }
 
 float UListDataObject_Scalar::StringToFloat(const FString& InString) const

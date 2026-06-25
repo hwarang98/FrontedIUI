@@ -221,13 +221,11 @@ void UWidget_OptionsScreen::OnResetBoundActionTriggered()
 				// 반환값: true = 초기화 성공, false = 초기화 실패 (데이터 타입이 초기화를 지원하지 않는 경우)
 				if (DataToReset->TryResetBackToDefaultValue())
 				{
-					Debug::Print(DataToReset->GetDataDisplayName().ToString() + TEXT(" was reset"));
 				}
 				else
 				{
 					// 초기화 실패 항목이 하나라도 있으면 루프 완료 후 배열을 유지
 					bHasDataFailedToReset = true;
-					Debug::Print(DataToReset->GetDataDisplayName().ToString() + TEXT(" 초기회 실패"));
 				}
 			}
 

@@ -18,7 +18,12 @@ public class FrontedUI : ModuleRules
 			"GameplayTags",
 			"UMG",
 			"CommonInput",
-			"PropertyPath"
+			"CommonUI",
+			"PropertyPath",
+			"PreLoadScreen",
+			"AIModule",
+			"StateTreeModule",
+			"GameplayStateTreeModule"
 		});
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
@@ -26,6 +31,7 @@ public class FrontedUI : ModuleRules
 		// Uncomment if you are using Slate UI
 		PrivateDependencyModuleNames.AddRange(new[] { "Slate", "SlateCore" });
 
+		if (Target.bBuildEditor) PrivateDependencyModuleNames.Add("UnrealEd");
 		// Uncomment if you are using online features
 		// PrivateDependencyModuleNames.Add("OnlineSubsystem");
 

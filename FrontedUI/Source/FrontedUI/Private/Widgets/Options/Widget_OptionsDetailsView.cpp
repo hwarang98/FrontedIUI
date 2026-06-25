@@ -28,9 +28,11 @@ void UWidget_OptionsDetailsView::UpdateDetailsViewInfo(UListDataObject_Base* InD
 
 	CommonRichText_Description->SetText(InDataObject->GetDescriptionRichText());
 
-	const FString DynamicDetails = FString::Printf(TEXT("Data Object Class: <Bold>%s</>\n\nEntry WidgetClass:<Bold>%s</>"), *InDataObject->GetClass()->GetName(), *InEntryWidgetClassName);
-	CommonRichText_DynamicDetails->SetText(FText::FromString(DynamicDetails));
-	CommonRichText_DisabledReason->SetText(InDataObject->GetDisabledRichText());
+	// const FString DynamicDetails = FString::Printf(TEXT("Data Object Class: <Bold>%s</>\n\nEntry WidgetClass:<Bold>%s</>"), *InDataObject->GetClass()->GetName(), *InEntryWidgetClassName);
+	// CommonRichText_DynamicDetails->SetText(FText::FromString(DynamicDetails));
+
+	const FText DisabledReasonText = InDataObject->IsDataCurrentlyEditable() ? FText::GetEmpty() : InDataObject->GetDisabledRichText();
+	CommonRichText_DisabledReason->SetText(DisabledReasonText);
 }
 
 void UWidget_OptionsDetailsView::ClearDetailsViewInfo()

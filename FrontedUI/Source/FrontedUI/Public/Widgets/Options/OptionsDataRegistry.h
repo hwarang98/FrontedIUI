@@ -38,10 +38,11 @@ public:
 private:
 	void FindChildListDataRecursively(UListDataObject_Base* InParentData, TArray<UListDataObject_Base*>& OutFoundChildListData) const;
 
-	void InitGameplayCollectionTab(); // 게임플레이 탭 컬렉션 생성 및 등록
-	void InitAudioCollectionTab();    // 오디오 탭 컬렉션 생성 및 등록
-	void InitVideoCollectionTab();    // 비디오 탭 컬렉션 생성 및 등록
-	void InitControlCollectionTab();  // 컨트롤 탭 컬렉션 생성 및 등록
+	void InitGameplayCollectionTab();                                 // 게임플레이 탭 컬렉션 생성 및 등록
+	void InitAudioCollectionTab();                                    // 오디오 탭 컬렉션 생성 및 등록
+	void InitVideoCollectionTab();                                    // 비디오 탭 컬렉션 생성 및 등록
+	void InitControlCollectionTab(ULocalPlayer* InOwningLocalPlayer); // 컨트롤 탭 컬렉션 생성 및 등록
+	void InitSystemCollectionTab(ULocalPlayer* InOwningLocalPlayer);  // 시스템 탭 컬렉션 생성 및 등록
 
 	UPROPERTY(Transient)
 	TArray<UListDataObject_Collection*> RegisteredOptionsTabCollections; // 등록된 탭 컬렉션 배열 (GC 추적, 직렬화 제외)

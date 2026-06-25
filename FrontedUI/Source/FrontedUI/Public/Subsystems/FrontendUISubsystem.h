@@ -4,11 +4,12 @@
 
 #include "CoreMinimal.h"
 #include "FrontendTypes/FrontendEnum.h"
+#include "GameplayTagContainer.h"
 #include "Subsystems/GameInstanceSubsystem.h"
 #include "Widgets/Widget_ActivatableBase.h"
 #include "FrontendUISubsystem.generated.h"
 
-struct FGameplayTag;
+class UCommonActivatableWidgetContainerBase;
 class UWidget_ActivatableBase;
 class UWidget_PrimaryLayout;
 
@@ -75,6 +76,22 @@ public:
 	void PushSoftWidgetToStackAsync(const FGameplayTag& InWidgetStackTag, TSoftClassPtr<UWidget_ActivatableBase> InSoftWidgetClass, TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> AsyncPushStateCallback);
 
 	/**
+	 * @brief DeveloperSettings에 지정된 메인 게임 레벨로 전환합니다.
+	 *
+	 * @note LoadingScreenSubsystem이 PreLoadMapWithContext 델리게이트를 통해 로딩 화면을 자동으로 처리합니다.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void StartNewGame();
+
+	/**
+	 * @brief DeveloperSettings에 지정된 프론트엔드 레벨로 전환합니다.
+	 *
+	 * @note LoadingScreenSubsystem이 PreLoadMapWithContext 델리게이트를 통해 로딩 화면을 자동으로 처리합니다.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void ReturnToFrontend();
+
+	/**
 	 * @brief 확인 팝업을 Modal 스택에 비동기로 푸시합니다.
 	 * @param InScreenType          표시할 버튼 구성 타입 (Ok / YesNo / OKCancel)
 	 * @param InScreenTitle         팝업 제목 텍스트
@@ -84,11 +101,33 @@ public:
 	 */
 	void PushConfirmScreenToModalStackAsync(EConfirmScreenType InScreenType, const FText& InScreenTitle, const FText& InScreenMessage, TFunction<void(EConfirmScreenButtonType)> ButtonClickedCallback);
 
+	/**
+	 * @brief HUD 스택에 메시지 알림을 푸시하고 Duration 초 후 자동으로 닫는다.
+	 *
+	 * @param Message  화면에 표시할 텍스트
+	 * @param Duration 표시 지속 시간 (초, 기본값 1.0)
+	 */
+	void ShowHudNotification(const FText& Message, float Duration = 1.0f);
+
+	/**
+	 * @brief 지정한 스택 태그에 대기 중인 푸시 요청을 소진합니다.
+	 * @note Widget_PrimaryLayout::RegisterWidgetStack 에서 스택이 등록된 직후 호출합니다.
+	 *       에셋이 캐시된 경우 async 콜백이 스택 등록 전에 실행되어 큐에 쌓인 요청을 처리합니다.
+	 */
+	void FlushPendingPushesForStack(const FGameplayTag& InStackTag, UCommonActivatableWidgetContainerBase* InStack);
+
 	/** 버튼의 설명 텍스트가 갱신될 때 브로드캐스트 — 버튼 설명 UI를 구독하는 쪽에서 바인딩 */
 	UPROPERTY(BlueprintAssignable)
 	FOnButtonDescriptionTextUpdatedDelegate OnButtonDescriptionTextUpdated;
 
 private:
+	struct FPendingWidgetPush
+	{
+		FGameplayTag WidgetStackTag;
+		TWeakObjectPtr<UClass> LoadedWidgetClass;
+		TFunction<void(EAsyncPushWidgetState, UWidget_ActivatableBase*)> Callback;
+	};
+
 	/**
 	 * @brief 현재 활성화된 PrimaryLayout 위젯에 대한 참조
 	 *
@@ -97,4 +136,7 @@ private:
 	 */
 	UPROPERTY(Transient)
 	TObjectPtr<UWidget_PrimaryLayout> CreatedPrimaryLayout;
+
+	/** 스택이 아직 등록되지 않아 지연된 위젯 푸시 요청 목록 */
+	TArray<FPendingWidgetPush> PendingWidgetPushes;
 };

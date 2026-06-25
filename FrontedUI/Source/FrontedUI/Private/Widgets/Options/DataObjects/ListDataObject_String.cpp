@@ -63,8 +63,6 @@ void UListDataObject_String::AdvanceToNextOption()
 	{
 		DataDynamicSetter->SetValueFromString(CurrentStringValue);
 
-		Debug::Print(TEXT("Getter에서 최신 값을 가져오기 위해 DataDynamicSetter를 사용합니다. : ") + DataDynamicGetter->GetValueAsString());
-
 		NotifyListDataModified(this);
 	}
 }
@@ -93,8 +91,6 @@ void UListDataObject_String::BackToPreviousOption()
 	if (DataDynamicSetter)
 	{
 		DataDynamicSetter->SetValueFromString(CurrentStringValue);
-
-		Debug::Print(TEXT("Getter에서 최신 값을 가져오기 위해 DataDynamicSetter를 사용합니다. : ") + DataDynamicGetter->GetValueAsString());
 
 		NotifyListDataModified(this);
 	}
@@ -149,6 +145,24 @@ bool UListDataObject_String::TryResetBackToDefaultValue()
 	}
 
 	return false;
+}
+
+bool UListDataObject_String::CanSetToForcedStringValue(const FString& InForcedValue) const
+{
+	return CurrentStringValue != InForcedValue;
+}
+
+void UListDataObject_String::OnSetToForcedStringValue(const FString& InForcedValue)
+{
+	CurrentStringValue = InForcedValue;
+	TrySetDisplayTextFromStringValue(CurrentStringValue);
+
+	if (DataDynamicSetter)
+	{
+		DataDynamicSetter->SetValueFromString(CurrentStringValue);
+
+		NotifyListDataModified(this, EOptionsListDataModifyReason::DependencyModified);
+	}
 }
 
 bool UListDataObject_String::TrySetDisplayTextFromStringValue(const FString& InStringValue)

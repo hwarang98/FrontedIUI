@@ -68,12 +68,84 @@ void UFrontendGameUserSettings::SetOverallVolume(float InVolume)
 
 void UFrontendGameUserSettings::SetMusicVolume(float InVolume)
 {
+	UWorld* InAudioWorld = nullptr;
+	const UFrontendDeveloperSettings* FrontendDeveloperSettings = GetDefault<UFrontendDeveloperSettings>();
+
+	if (GEngine)
+	{
+		InAudioWorld = GEngine->GetCurrentPlayWorld();
+	}
+
+	if (!InAudioWorld || !FrontendDeveloperSettings)
+	{
+		return;
+	}
+
+	USoundClass* MusicSoundClass = nullptr;
+	if (UObject* LoadedObject = FrontendDeveloperSettings->MusicSoundClass.TryLoad())
+	{
+		MusicSoundClass = CastChecked<USoundClass>(LoadedObject);
+	}
+
+	USoundMix* DefaultSoundMix = nullptr;
+	if (UObject* LoadedObject = FrontendDeveloperSettings->DefaultSoundMix.TryLoad())
+	{
+		DefaultSoundMix = CastChecked<USoundMix>(LoadedObject);
+	}
+
 	MusicVolume = InVolume;
+
+	UGameplayStatics::SetSoundMixClassOverride(
+		InAudioWorld,
+		DefaultSoundMix,
+		MusicSoundClass,
+		MusicVolume,
+		1.f,
+		0.2f
+		);
+
+	UGameplayStatics::PushSoundMixModifier(InAudioWorld, DefaultSoundMix);
 }
 
 void UFrontendGameUserSettings::SetSoundFXVolume(float InVolume)
 {
+	UWorld* InAudioWorld = nullptr;
+	const UFrontendDeveloperSettings* FrontendDeveloperSettings = GetDefault<UFrontendDeveloperSettings>();
+
+	if (GEngine)
+	{
+		InAudioWorld = GEngine->GetCurrentPlayWorld();
+	}
+
+	if (!InAudioWorld || !FrontendDeveloperSettings)
+	{
+		return;
+	}
+
+	USoundClass* SoundFXSoundClass = nullptr;
+	if (UObject* LoadedObject = FrontendDeveloperSettings->SoundFXSoundClass.TryLoad())
+	{
+		SoundFXSoundClass = CastChecked<USoundClass>(LoadedObject);
+	}
+
+	USoundMix* DefaultSoundMix = nullptr;
+	if (UObject* LoadedObject = FrontendDeveloperSettings->DefaultSoundMix.TryLoad())
+	{
+		DefaultSoundMix = CastChecked<USoundMix>(LoadedObject);
+	}
+
 	SoundFXVolume = InVolume;
+
+	UGameplayStatics::SetSoundMixClassOverride(
+		InAudioWorld,
+		DefaultSoundMix,
+		SoundFXSoundClass,
+		SoundFXVolume,
+		1.f,
+		0.2f
+		);
+
+	UGameplayStatics::PushSoundMixModifier(InAudioWorld, DefaultSoundMix);
 }
 
 void UFrontendGameUserSettings::SetAllowBackGroundAudio(bool IsAllowed)
@@ -84,4 +156,23 @@ void UFrontendGameUserSettings::SetAllowBackGroundAudio(bool IsAllowed)
 void UFrontendGameUserSettings::SetUseHDRAudioMode(bool IsAllowed)
 {
 	bUseHDRAudioMode = IsAllowed;
+}
+
+float UFrontendGameUserSettings::GetCurrentDisplayGamma() const
+{
+	if (GEngine)
+	{
+		return GEngine->GetDisplayGamma();
+	}
+
+	return 0.0f;
+}
+
+void UFrontendGameUserSettings::SetCurrentDisplayGamma(float InNewGamma)
+{
+	if (GEngine)
+	{
+		GEngine->DisplayGamma = InNewGamma;
+	}
+
 }

@@ -89,27 +89,9 @@ void UWidget_ConfirmScreen::InitConfirmScreen(const UConfirmScreenInfoObject* In
 
 	for (const FConfirmScreenButtonInfo& AvailableButtonInfo : InScreenInfoObject->AvailableScreenButtons)
 	{
-		FDataTableRowHandle InputActionRowHandle;
-
-		switch (AvailableButtonInfo.ConfirmScreenButtonType)
-		{
-			case EConfirmScreenButtonType::Cancelled:
-				// 취소 버튼은 뒤로가기(B/Circle) 입력에 바인딩
-				InputActionRowHandle = ICommonInputModule::GetSettings().GetDefaultBackAction();
-				break;
-
-			case EConfirmScreenButtonType::Closed:
-				// 단순 닫기 버튼도 취소와 동일하게 뒤로가기 입력에 바인딩
-				InputActionRowHandle = ICommonInputModule::GetSettings().GetDefaultBackAction();
-				break;
-
-			default:
-				break;
-		}
 
 		UFrontendCommonButtonBase* AddedButton = DynamicEntryBox_Buttons->CreateEntry<UFrontendCommonButtonBase>();
 		AddedButton->SetButtonText(AvailableButtonInfo.ButtonTextToDisplay);
-		AddedButton->SetTriggeringInputAction(InputActionRowHandle);
 
 		// 클릭 시 콜백을 먼저 실행한 뒤 위젯을 비활성화 — 콜백 안에서 위젯 상태에 접근 가능하도록 순서 보장
 		AddedButton->OnClicked().AddLambda(
@@ -121,8 +103,15 @@ void UWidget_ConfirmScreen::InitConfirmScreen(const UConfirmScreenInfoObject* In
 	}
 
 	// 마지막 버튼(보통 취소 계열)에 포커스를 두어 실수로 확인을 누르는 것을 방지
+
+}
+
+UWidget* UWidget_ConfirmScreen::NativeGetDesiredFocusTarget() const
+{
 	if (DynamicEntryBox_Buttons->GetNumEntries() != 0)
 	{
 		DynamicEntryBox_Buttons->GetAllEntries().Last()->SetFocus();
 	}
+
+	return Super::NativeGetDesiredFocusTarget();
 }

@@ -3,11 +3,15 @@
 
 #include "Widgets/Widget_PrimaryLayout.h"
 #include "FrontendDebugHelper.h"
+#include "Subsystems/FrontendUISubsystem.h"
 
 UCommonActivatableWidgetContainerBase* UWidget_PrimaryLayout::FindWidgetStackByTag(const FGameplayTag& InTag) const
 {
-	// 태그에 해당하는 스택이 없으면 에러 메시지와 함께 크래시 — 호출 전 반드시 등록 필요
-	checkf(RegisterWidgetStackMap.Contains(InTag), TEXT("태그로 위젯 스택을 찾을 수 없습니다 : %s"), *InTag.ToString());
+	if (!RegisterWidgetStackMap.Contains(InTag))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FindWidgetStackByTag: 태그에 해당하는 스택이 없습니다 : %s"), *InTag.ToString());
+		return nullptr;
+	}
 	return RegisterWidgetStackMap.FindRef(InTag);
 }
 
@@ -20,6 +24,12 @@ void UWidget_PrimaryLayout::RegisterWidgetStack(UPARAM(meta = (Categories = "Fro
 		if (!RegisterWidgetStackMap.Contains(InStackTag))
 		{
 			RegisterWidgetStackMap.Add(InStackTag, InStack);
+
+			// 스택 등록 전에 async 콜백이 먼저 실행되어 큐에 쌓인 요청이 있으면 여기서 소진
+			if (UFrontendUISubsystem* UISubsystem = UFrontendUISubsystem::Get(this))
+			{
+				UISubsystem->FlushPendingPushesForStack(InStackTag, InStack);
+			}
 		}
 	}
 }

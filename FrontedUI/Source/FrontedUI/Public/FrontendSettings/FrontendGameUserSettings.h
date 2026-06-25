@@ -59,6 +59,15 @@ public:
 	void SetUseHDRAudioMode(bool IsAllowed);
 	#pragma endregion
 
+	#pragma region Video Collection Tab
+	UFUNCTION()
+	float GetCurrentDisplayGamma() const;
+
+	UFUNCTION()
+	void SetCurrentDisplayGamma(float InNewGamma);
+
+	#pragma endregion
+
 private:
 	#pragma region Gameplay Collection Tab
 	UPROPERTY(Config)

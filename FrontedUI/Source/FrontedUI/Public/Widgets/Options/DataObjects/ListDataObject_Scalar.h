@@ -33,6 +33,7 @@ private:
 	#pragma region UListDataObject_Base Interface
 	virtual bool CanResetBackToDefaultValue() const override;
 	virtual bool TryResetBackToDefaultValue() override;
+	virtual void OnEditDependencyDataModified(UListDataObject_Base* ModifiedDependencyData, EOptionsListDataModifyReason ModifiedReason) override;
 	#pragma endregion
 
 	float StringToFloat(const FString& InString) const;

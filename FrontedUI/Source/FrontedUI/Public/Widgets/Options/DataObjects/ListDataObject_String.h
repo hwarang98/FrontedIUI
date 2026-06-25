@@ -41,7 +41,7 @@ public:
 	FORCEINLINE FText GetCurrentDisplayText() const { return CurrentDisplayText; }
 
 protected:
-	// ~ Begin UListDataObject_Base Interface
+	#pragma region UListDataObject_Base Interface
 	/**
 	 * @brief 현재 값을 결정한다. 우선순위: 배열 첫 항목 → 기본값 → 동적 Getter 순으로 덮어쓴다.
 	 */
@@ -56,7 +56,10 @@ protected:
 	 * @return DataDynamicSetter가 유효하고 실제로 값이 변경된 경우에만 true
 	 */
 	virtual bool TryResetBackToDefaultValue() override;
-	// ~ End UListDataObject_Base Interface
+	virtual bool CanSetToForcedStringValue(const FString& InForcedValue) const override;
+	virtual void OnSetToForcedStringValue(const FString& InForcedValue) override;
+	#pragma endregion  UListDataObject_Base Interface
+
 
 	/**
 	 * @brief 문자열 값에 대응하는 표시 텍스트를 찾아 CurrentDisplayText에 설정한다.

@@ -19,6 +19,9 @@ namespace FrontendGameplayTags
 	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_MainMenuScreen);
 	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_ConfirmScreen);
 	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_OptionsScreen);
+	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_KeyRemapScreen);
+	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_ClearScreen);
+	FRONTEDUI_API UE_DECLARE_GAMEPLAY_TAG_EXTERN(Frontend_Widget_GameOverScreen);
 	#pragma endregion
 
 	#pragma region Frontend Option Image
